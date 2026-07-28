@@ -1,0 +1,30 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.db
+*.db-shm
+*.db-wal
+
+## Node / Frontend
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+.env.*.local
+
+## Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+## AI tooling (local only, not shared)
+.ia/
+.claude/
+.superpowers
