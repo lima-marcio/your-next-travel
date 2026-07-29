@@ -12,3 +12,7 @@
 
 Deferred to a later phase (out of scope for now): general sightseeing tips
 unrelated to matched events, local language/phrasebook info.
+
+Revisit at end of project: adaptive visual theme that shifts tone (e.g. more
+vibrant/energetic vs. warm/editorial) based on the user's selected interests
+instead of one fixed theme for everyone.
