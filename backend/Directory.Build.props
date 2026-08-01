@@ -1,0 +1,26 @@
+<Project>
+
+  <!--
+    NuGet Audit: fail the build (not just warn) on any known package
+    vulnerability, at any severity level. Applies to every project under
+    backend/ since MSBuild imports Directory.Build.props automatically.
+  -->
+  <PropertyGroup>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904</WarningsAsErrors>
+  </PropertyGroup>
+
+  <!--
+    Transitive override: Microsoft.EntityFrameworkCore.Sqlite 10.0.10 pulls in
+    SQLitePCLRaw 2.1.11, which has a known high-severity vulnerability
+    (GHSA-2m69-gcr7-jv3q). Pinned to a patched version here so it applies to
+    every project that references EFCore.Sqlite, instead of duplicating the
+    override per csproj.
+  -->
+  <ItemGroup>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+  </ItemGroup>
+
+</Project>
