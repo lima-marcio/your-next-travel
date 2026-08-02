@@ -4,6 +4,7 @@ namespace YourNextTravel.Api.Features.Auth;
 
 public class RegisterRequest
 {
+    [EmailAddress(ErrorMessage = "Email must be a valid email address.")]
     public required string Email { get; set; }
 
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
@@ -17,7 +18,9 @@ public class RegisterRequest
 
 public class LoginRequest
 {
+    [EmailAddress(ErrorMessage = "Email must be a valid email address.")]
     public required string Email { get; set; }
+
     public required string Password { get; set; }
 }
 
