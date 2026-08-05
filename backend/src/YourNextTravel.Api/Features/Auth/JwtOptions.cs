@@ -9,10 +9,7 @@ public class JwtOptions
     public required string SigningKey { get; set; }
 
     /// <summary>
-    /// No refresh-token handling for MVP (matching the workspace's existing
-    /// siblings' simplicity). Expiry is longer than a typical 60-minute default
-    /// because this is a low-stakes informational app with no sensitive
-    /// transaction to protect with a short-lived token.
+    /// Access tokens expire 2 hours after sign in (see .ia/10-backend.md).
     /// </summary>
-    public int ExpiryMinutes { get; set; } = 1440;
+    public int ExpiryMinutes { get; set; } = 120;
 }
