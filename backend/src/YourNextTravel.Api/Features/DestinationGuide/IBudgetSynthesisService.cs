@@ -1,7 +1,7 @@
 using YourNextTravel.Api.Domain.Pricing;
 using YourNextTravel.Api.Domain.Users;
 
-namespace YourNextTravel.Api.Features.Dossier;
+namespace YourNextTravel.Api.Features.DestinationGuide;
 
 public interface IBudgetSynthesisService
 {

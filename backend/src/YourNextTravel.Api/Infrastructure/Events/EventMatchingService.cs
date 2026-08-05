@@ -34,8 +34,8 @@ public class EventMatchingService : IEventMatchingService
             return [];
         }
 
-        var radiusKm = _configuration.GetValue("Dossier:EventProximityKm", 500);
-        var windowDays = _configuration.GetValue("Dossier:EventDateWindowDays", 3);
+        var radiusKm = _configuration.GetValue("DestinationGuide:EventProximityKm", 500);
+        var windowDays = _configuration.GetValue("DestinationGuide:EventDateWindowDays", 3);
 
         var windowStart = startDate.AddDays(-windowDays).ToDateTime(TimeOnly.MinValue);
         var windowEnd = endDate.AddDays(windowDays).ToDateTime(TimeOnly.MaxValue);

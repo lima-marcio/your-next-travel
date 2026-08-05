@@ -1,9 +1,9 @@
 using YourNextTravel.Api.Domain.Events;
 using YourNextTravel.Api.Domain.Users;
 
-namespace YourNextTravel.Api.Features.Dossier;
+namespace YourNextTravel.Api.Features.DestinationGuide;
 
-public class DossierSearchRequest
+public class DestinationGuideSearchRequest
 {
     public required string Destination { get; set; }
     public required DateOnly StartDate { get; set; }
@@ -27,7 +27,7 @@ public record BudgetSummaryResponse(decimal LodgingComponentAmount, decimal Misc
 public record MatchingEventResponse(
     Guid Id, InterestCategory Category, string Title, string? VenueName, DateTime StartUtc, DateTime? EndUtc, double? DistanceKm, string? ExternalUrl);
 
-public record DossierResponse(
+public record DestinationGuideResponse(
     Guid SearchId,
     string CityName,
     string CountryName,

@@ -4,7 +4,7 @@
 - [ ] Phase 1 — Domain & persistence foundation
 - [ ] Phase 2 — Authentication (JWT + Google OAuth, profiles, interests)
 - [ ] Phase 3 — External integrations behind interfaces + background refresh
-- [ ] Phase 4 — Fluxo A: destination dossier
+- [ ] Phase 4 — Fluxo A: destination guide
 - [ ] Phase 5 — Fluxo B: interest-based discovery + Random Outing
 - [ ] Phase 6 — Budget synthesis
 - [ ] Phase 7 — Testing

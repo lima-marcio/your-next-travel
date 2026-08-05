@@ -8,9 +8,9 @@ using YourNextTravel.Api.Infrastructure.Destinations;
 using YourNextTravel.Api.Infrastructure.Events;
 using YourNextTravel.Api.Infrastructure.Persistence;
 
-namespace YourNextTravel.Api.Features.Dossier;
+namespace YourNextTravel.Api.Features.DestinationGuide;
 
-public class DossierService : IDossierService
+public class DestinationGuideService : IDestinationGuideService
 {
     private readonly AppDbContext _dbContext;
     private readonly IDestinationResolver _destinationResolver;
@@ -19,7 +19,7 @@ public class DossierService : IDossierService
     private readonly IBudgetSynthesisService _budgetSynthesisService;
     private readonly IConfiguration _configuration;
 
-    public DossierService(
+    public DestinationGuideService(
         AppDbContext dbContext,
         IDestinationResolver destinationResolver,
         IEventMatchingService eventMatchingService,
@@ -35,7 +35,7 @@ public class DossierService : IDossierService
         _configuration = configuration;
     }
 
-    public async Task<DossierResponse> SearchAsync(Guid userId, DossierSearchRequest request, CancellationToken cancellationToken)
+    public async Task<DestinationGuideResponse> SearchAsync(Guid userId, DestinationGuideSearchRequest request, CancellationToken cancellationToken)
     {
         var city = await _destinationResolver.ResolveAsync(request.Destination, cancellationToken)
             ?? throw new ArgumentException($"Could not find a destination matching '{request.Destination}'.");
@@ -62,7 +62,7 @@ public class DossierService : IDossierService
         var (weather, currency, lodging, legalHealth, events) = await BuildLiveSectionsAsync(
             userId, city, country, request.StartDate, request.EndDate, lodgingEstimate, cancellationToken);
 
-        return new DossierResponse(
+        return new DestinationGuideResponse(
             search.Id, city.Name, country.Name, request.StartDate, request.EndDate, profileType,
             weather, currency, lodging, legalHealth,
             new BudgetSummaryResponse(budget.LodgingComponentAmount, budget.MiscDailyComponentAmount, budget.TotalAmount, budget.Currency, budget.AssumptionsNote),
@@ -79,7 +79,7 @@ public class DossierService : IDossierService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<DossierResponse> GetBySearchIdAsync(Guid userId, Guid searchId, CancellationToken cancellationToken)
+    public async Task<DestinationGuideResponse> GetBySearchIdAsync(Guid userId, Guid searchId, CancellationToken cancellationToken)
     {
         var search = await _dbContext.DestinationSearches
             .FirstOrDefaultAsync(s => s.Id == searchId && s.UserId == userId, cancellationToken)
@@ -97,7 +97,7 @@ public class DossierService : IDossierService
         var (weather, currency, lodging, legalHealth, events) = await BuildLiveSectionsAsync(
             userId, city, country, search.StartDate, search.EndDate, lodgingEstimate, cancellationToken);
 
-        return new DossierResponse(
+        return new DestinationGuideResponse(
             search.Id, city.Name, country.Name, search.StartDate, search.EndDate, search.TravelerProfileTypeUsed,
             weather, currency, lodging, legalHealth,
             new BudgetSummaryResponse(

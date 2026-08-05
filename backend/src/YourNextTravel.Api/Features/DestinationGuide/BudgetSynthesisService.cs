@@ -5,7 +5,7 @@ using YourNextTravel.Api.Domain.Users;
 using YourNextTravel.Api.Infrastructure.Currency;
 using YourNextTravel.Api.Infrastructure.Persistence;
 
-namespace YourNextTravel.Api.Features.Dossier;
+namespace YourNextTravel.Api.Features.DestinationGuide;
 
 public class BudgetSynthesisService : IBudgetSynthesisService
 {

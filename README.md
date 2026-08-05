@@ -3,7 +3,7 @@
 ## Overview
 
 Travel-planning app. Given a destination and trip length (e.g. "1 week in
-Rome"), it assembles a **dossier** of real-world information: weather / best
+Rome"), it assembles a **destination guide** of real-world information: weather / best
 time to visit, local currency exchange rate, a real lodging price estimate,
 legal/health requirements (visa, vaccination), and an estimated budget
 adjusted by traveler profile (student / tourist / business).
@@ -14,7 +14,7 @@ app surfaces destinations/dates where matching events are happening, grouped
 into three horizons (within a week, next month, next semester) — including a
 "Random Outing" mode that picks a surprise suggestion.
 
-This is an informational dossier, not a booking engine — no cart/payment
+This is an informational destination guide, not a booking engine — no cart/payment
 flow. Prices and data are pulled from real external APIs so budget estimates
 stay grounded in reality.
 

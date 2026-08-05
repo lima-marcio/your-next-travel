@@ -3,7 +3,7 @@ using YourNextTravel.Api.BackgroundServices;
 using YourNextTravel.Api.Features.Admin;
 using YourNextTravel.Api.Features.Auth;
 using YourNextTravel.Api.Features.Discovery;
-using YourNextTravel.Api.Features.Dossier;
+using YourNextTravel.Api.Features.DestinationGuide;
 using YourNextTravel.Api.Features.Interests;
 using YourNextTravel.Api.Features.Profiles;
 using YourNextTravel.Api.Infrastructure.Currency;
@@ -43,7 +43,7 @@ public static class ApplicationServicesExtensions
         services.AddLodgingProvider(configuration);
         services.AddEventProviders(configuration);
         services.AddExternalDataRefreshBackgroundService();
-        services.AddDossierFeature();
+        services.AddDestinationGuideFeature();
         services.AddDiscoveryFeature();
 
         return services;

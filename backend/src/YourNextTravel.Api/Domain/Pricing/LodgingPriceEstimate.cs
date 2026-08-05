@@ -2,8 +2,8 @@ namespace YourNextTravel.Api.Domain.Pricing;
 
 /// <summary>
 /// A periodic snapshot of typical lodging prices for a city, not an exact quote
-/// for a specific stay — the dossier surfaces it as a reference range, not a
-/// guaranteed price.
+/// for a specific stay — the destination guide surfaces it as a reference
+/// range, not a guaranteed price.
 /// </summary>
 public sealed class LodgingPriceEstimate
 {
