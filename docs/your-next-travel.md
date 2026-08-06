@@ -32,7 +32,7 @@ Ticketmaster, Google OAuth) so budget estimates stay grounded in reality.
 **Stack:** .NET 10 / ASP.NET Core / EF Core / SQLite (dev) / SQL Server
 (prod) / JWT + Google OAuth on the backend; React 19 / TypeScript / Vite /
 Tailwind / Axios / React Router / TanStack Query / React Hook Form / Zod on
-the frontend (not started yet — see §4).
+the frontend (public + protected routes built — see §3/§4).
 
 ## 2. Key decisions taken
 
@@ -114,13 +114,14 @@ the frontend (not started yet — see §4).
   to real external APIs only happen during the user's manual testing phase;
   data seeds never run automatically on startup.
 
-### Frontend architecture (planned, not yet built)
+### Frontend architecture
 - Feature-sliced modules (`api/ components/ features/ hooks/ pages/ routes/
   stores/ types/`); server state via TanStack Query, client auth-session
   state via a small Zustand store persisted to `localStorage`.
-- Axios instance with a request interceptor for the bearer token and a
-  response interceptor that attempts one silent refresh on 401 before
-  clearing the session and redirecting to `/signin`.
+- Axios instance with a request interceptor for the bearer token. The
+  response interceptor currently only clears the session on a 401 from an
+  authenticated request — the spec's silent-*refresh* step is still deferred
+  until backend 1.4 ships `POST /api/auth/refresh` (see §3).
 - Mandatory baseline pages (project-wide rule, not specific to this app):
   landing, sign in, sign up, profile, dashboard; dashboard = collapsible
   left sidebar + top navbar with right-aligned user menu (profile/logout).
@@ -160,7 +161,7 @@ the frontend (not started yet — see §4).
   baseline rules were added to `.ia/`. Status: **approved, ready for
   implementation** — this is the plan being executed against.
 
-**Frontend — Part 2, Public routes (uncommitted):**
+**Frontend — Part 2, Public routes (`67d175d`, pushed):**
 - `frontend/` scaffolded: Vite + React 19 + TypeScript, per `.ia/20-frontend.md`
   (Tailwind v4, Axios, React Router, TanStack Query, React Hook Form, Zod,
   plus Zustand for the auth store as called for in the design spec).
@@ -175,10 +176,9 @@ the frontend (not started yet — see §4).
   brief), light/dark mode via `prefers-color-scheme`.
 - Built: `LandingPage` (`/`), `SignInPage` (`/signin`), `SignUpPage`
   (`/signup`), plus a `NotFoundPage` catch-all. Shared infra: Axios client
-  with bearer-token attach and a 401 handler (session clear only — silent
-  *refresh* is deferred until 1.4 ships the refresh-token endpoint), Zustand
-  auth store persisted to `localStorage`, Zod schemas mirroring the
-  backend's validation rules exactly, ProblemDetails-aware error parsing.
+  with bearer-token attach and a 401 handler, Zustand auth store persisted
+  to `localStorage`, Zod schemas mirroring the backend's validation rules
+  exactly, ProblemDetails-aware error parsing.
 - Verified against the real backend (not just mocks): `dotnet build` +
   `npm run build` both clean, `npm run lint` (oxlint) clean, 4 Vitest/RTL/MSW
   tests covering the spec's auth-flow scope (sign up → redirect to sign in
@@ -190,31 +190,77 @@ the frontend (not started yet — see §4).
   middleware, not an empty body as first assumed — the frontend's error
   parsing was adjusted accordingly).
 
-**⚠ Needs manual testing before building on top of it (pending, not yet run):**
-Automated coverage above verified logic and contracts, not the actual
-rendered UI in a real browser. No browser-automation tool was available in
-this session to do that verification, so it's still open. Before starting
-Protected routes, run through:
-- Visual QA of `LandingPage`, `SignInPage`, `SignUpPage` in an actual browser
-  (`npm run dev` in `frontend/`, backend running on `:5080`), both light and
-  dark mode (`prefers-color-scheme`), and at mobile width.
-- A real sign-up → sign-in round trip through the UI (not curl) against the
-  running backend: create an account, confirm the redirect-to-sign-in
-  confirmation banner, sign in, confirm the (expected) 404 on `/dashboard`
-  since Protected routes don't exist yet.
-- Error states in the browser: wrong password, weak password, duplicate
-  email on register.
-- Confirm the `picsum.photos` placeholder images actually load (real network
-  dependency, not mocked in tests).
+**Frontend — Part 2, Protected routes (uncommitted):**
+- `AuthGuard` (redirects to `/signin` when there's no session) +
+  `DashboardShell` (collapsible `Sidebar` — Dashboard/Guide/Discovery/Profile
+  — persisted to `localStorage`, and a `Navbar` with an avatar dropdown for
+  Profile/Sair) wrap five new routes: `DashboardPage` (`/dashboard`),
+  `DestinationGuideSearchPage` (`/guide`) + `DestinationGuideResultPage`
+  (`/guide/:searchId`), `DiscoveryFeedPage` (`/discovery`), `ProfilePage`
+  (`/profile`). New shared `ErrorState` (retry) and `EmptyState` components.
+- Every new page/hook is built against the backend's **current, real**
+  DTOs (read directly from the C# source, not assumed) — this surfaced a
+  real gap between the design spec (which assumes all of Part 1 is done)
+  and what's actually implemented, so several spec'd pieces are
+  deliberately scoped down or stubbed for now, each flagged in the UI or a
+  code comment rather than built against a contract that doesn't exist:
+  - **Profile → Location section**: the spec's cascading Country/Region/City
+    selects need `GeographyController` (backend 1.8, not implemented). Shown
+    as a labeled "coming soon" placeholder instead of a broken form.
+  - **Profile → Delete account**: needs `DELETE /api/auth/me` (backend 1.4,
+    not implemented). Same "coming soon" treatment, low-key per the spec.
+  - **Discovery → price sort toggle**: needs the `sort` query param and
+    price fields on `DiscoverySuggestion` (backend 1.3, not implemented).
+    Feed renders date-ordered groups only; no sort control shown.
+  - **Interests**: chips use the *current* 8-value `InterestCategory` enum
+    (`MotorsportF1`/`F2`/`Dtm`/`StockCar`, Football, Auctions, ConcertsShows,
+    CulturalFestivals) — the spec's revised taxonomy (backend 1.2, new
+    values like `Motorcycling`/`Arts`) isn't implemented yet.
+  - **Logout**: clears the local session only; no `POST /api/auth/logout`
+    call, since that route doesn't exist yet (backend 1.4).
+  - **`SignInPage`**: now genuinely navigates to a real `/dashboard` (no
+    longer a placeholder gap — this closes the redirect-target issue noted
+    in the Public routes work).
+- Verified: `dotnet build` + `npm run build` + `npm run lint` all clean, all
+  6 Vitest/RTL tests pass (the 4 existing auth-flow tests plus 2 new
+  `AuthGuard` tests — redirect when signed out, render through when signed
+  in). Smoke-tested the real, already-implemented backend endpoints via curl
+  with a live JWT: `GET/PUT /api/profile`, `GET/POST/DELETE /api/interests`,
+  `GET /api/discovery/feed`, `GET /api/destination-guide/history` — all
+  responses matched the frontend's TypeScript types exactly.
+  **Deliberately not curl-tested**: `POST /api/destination-guide/search` and
+  `GET /api/discovery/random-outing`, since both trigger live external API
+  calls (currency conversion, etc.) — `.ia/10-backend.md`'s agent operating
+  constraint reserves those for the user's manual testing pass, not the
+  agent. Their request/response shapes were still typed accurately, taken
+  directly from the C# DTOs.
+
+**⚠ Needs manual testing before building further on top of it (pending, not
+yet run — no browser-automation tool was available in this session):**
+- Visual QA of all eight pages in an actual browser (`npm run dev` in
+  `frontend/`, backend running on `:5080`), light and dark mode, mobile
+  width. Public routes (Landing/SignIn/SignUp) were flagged for this after
+  the previous session too and still haven't been manually opened in a
+  browser.
+- Full logged-in walkthrough: sign in → Dashboard cards populate/empty-state
+  correctly → create a Destination Guide search (this is where the deferred
+  external-API calls actually fire, so it's also the first real end-to-end
+  check of that path) → view the result page → toggle interests on Profile
+  → confirm Discovery reflects them after a matching event exists → collapse
+  the sidebar and confirm it persists on refresh → log out and confirm
+  `/dashboard` redirects back to `/signin`.
+- Confirm the "coming soon" Location/Delete-account placeholders read as
+  intentional, not broken.
+- Confirm the `picsum.photos` placeholder images load on both auth pages and
+  the (currently image-free) protected pages.
 
 **Not started yet:**
-- Beyond 1.1 and 1.5 (both done), none of the other
-  Part 1 backend revisions are implemented in code yet: the interest
-  taxonomy change, event pricing fields, refresh tokens, soft delete,
-  `FirstLoginAtUtc`/`LastAccessAtUtc`, the `Domain/Geography` entities, and
-  `Domain/TripPlanning` all still reflect the pre-revision state — only one
-  migration exists, no `RefreshToken`/`Geography`/`TripPlan` entities in the
-  codebase yet.
+- None of the Part 1 backend revisions beyond 1.1 and 1.5 are implemented:
+  interest taxonomy (1.2), event pricing/sort (1.3), refresh tokens/logout/
+  soft delete (1.4), first-login tracking (1.7), Geography (1.8), Trip
+  Planning (1.9) — only one migration exists in the whole project.
+- Trip Plans frontend (no backend to build against yet — depends on 1.9).
+- Google OAuth on the frontend (explicitly deferred by the spec).
 
 ## 4. Next steps
 
@@ -248,18 +294,19 @@ In spec order (`docs/superpowers/specs/2026-07-28-frontend-design.md`, Part
 
 **Part 2 — frontend build:**
 - ✅ **Public routes** (project setup + `LandingPage`, `SignInPage`,
-  `SignUpPage`) — done, uncommitted, see §3.
-- Remaining: `DashboardShell` (sidebar + navbar), protected pages
-  (Dashboard, Destination Guide search/result, Discovery feed, Profile with
-  cascading Country/Region/City selects and interests), `AuthGuard`,
-  silent-refresh added to the Axios interceptor once 1.4 ships
-  `/api/auth/refresh`, TanStack Query hooks per feature, and Vitest/RTL/MSW
-  coverage for the remaining flows listed in the spec's Testing section.
-  Note: `SignInPage` currently navigates straight to `/dashboard` on success
-  (no first-login branching yet) since that route doesn't exist until this
-  work lands, and `IsFirstLogin` doesn't exist on the backend until 1.7.
-  Google OAuth on the frontend stays explicitly deferred (email/password
-  only for now).
+  `SignUpPage`) — done, pushed (`67d175d`), see §3.
+- ✅ **Protected routes** (`AuthGuard`, `DashboardShell`, Dashboard,
+  Destination Guide search/result, Discovery feed, Profile) — done,
+  uncommitted, see §3. Built against the backend as it exists today, with
+  the Location select, price sort, delete-account and real logout call
+  explicitly deferred pending the matching Part 1 backend items.
+- Remaining, and now unblocked mainly by backend work: wiring the
+  Location/Delete-account placeholders once 1.8/1.4 land, adding the
+  Discovery price sort once 1.3 lands, adding silent-refresh to the Axios
+  interceptor once 1.4 ships `/api/auth/refresh`, switching `SignInPage`'s
+  redirect to branch on `IsFirstLogin` once 1.7 lands, and a Trip Plans UI
+  once 1.9 lands (no backend to build against yet). Google OAuth on the
+  frontend stays explicitly deferred (email/password only for now).
 
 **Open assumptions still pending confirmation** (called out in the spec,
 not yet decided by the user): refresh token lifetime (14 days proposed);
