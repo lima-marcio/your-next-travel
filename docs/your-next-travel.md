@@ -143,30 +143,72 @@ the frontend (not started yet — see §4).
 - `0a862e1`: password complexity enforcement on register; removed an unused
   NuGet package.
 - `ec09d52`: email format validation on register/login requests.
-- **Uncommitted right now:**
-  - `JwtOptions.ExpiryMinutes` and `appsettings.json`'s `Jwt:ExpiryMinutes`
-    changed 1440 → 120, implementing spec item 1.5 (access token lifetime).
-  - Spec item **1.1** (Dossier → Destination Guide rename) fully applied:
-    `Features/Dossier/*` moved to `Features/DestinationGuide/*`
-    (`DossierController`/`DossierService`/`IDossierService`/`DossierDtos`/
-    `DossierFeatureExtensions` → `DestinationGuide*` equivalents, namespace
-    updated), route `api/dossier` → `api/destination-guide`, config section
-    `Dossier` → `DestinationGuide` in `appsettings.json`, config keys in
-    `EventMatchingService` updated to match, plus wording fixes in
-    `LodgingPriceEstimate.cs`, `README.md` and `docs/roadmap.md`. No schema
-    change involved (no migration needed) — `dotnet build` verified clean.
-    Not yet committed.
+- **1.1** (Dossier → Destination Guide rename, `8c53c0e`): `Features/Dossier/*`
+  moved to `Features/DestinationGuide/*` (`DossierController`/`DossierService`/
+  `IDossierService`/`DossierDtos`/`DossierFeatureExtensions` →
+  `DestinationGuide*` equivalents, namespace updated), route `api/dossier` →
+  `api/destination-guide`, config section `Dossier` → `DestinationGuide` in
+  `appsettings.json`, config keys in `EventMatchingService` updated to match,
+  plus wording fixes in `LodgingPriceEstimate.cs`, `README.md` and
+  `docs/roadmap.md`. No schema change needed (no migration).
+- **1.5** (`15c6b50`): access token lifetime 24h → 2h (`JwtOptions.ExpiryMinutes`
+  / `appsettings.json`).
 
 **Design work:**
 - `e07431b` / `3966436`: frontend design spec drafted and then revised
   (`docs/superpowers/specs/2026-07-28-frontend-design.md`) after new
   baseline rules were added to `.ia/`. Status: **approved, ready for
-  implementation** — this is the plan being executed against, not yet
-  built.
+  implementation** — this is the plan being executed against.
+
+**Frontend — Part 2, Public routes (uncommitted):**
+- `frontend/` scaffolded: Vite + React 19 + TypeScript, per `.ia/20-frontend.md`
+  (Tailwind v4, Axios, React Router, TanStack Query, React Hook Form, Zod,
+  plus Zustand for the auth store as called for in the design spec).
+  `react-router-dom` is pinned to the latest release (7.18.2); its one open
+  advisory is RSC-mode-specific and doesn't apply to this client-only SPA —
+  downgrading to a version outside the advisory range would trade it for over
+  a dozen *unpatched* CVEs, so latest is the safer choice.
+- Design direction: warm/editorial travel-guide aesthetic per the spec,
+  built with the `design-taste-frontend` skill — Playfair Display (display) +
+  Inter Tight (body/UI), terracotta + slate palette (deliberately not the
+  beige/brass/oxblood combo that's the generic default for this kind of
+  brief), light/dark mode via `prefers-color-scheme`.
+- Built: `LandingPage` (`/`), `SignInPage` (`/signin`), `SignUpPage`
+  (`/signup`), plus a `NotFoundPage` catch-all. Shared infra: Axios client
+  with bearer-token attach and a 401 handler (session clear only — silent
+  *refresh* is deferred until 1.4 ships the refresh-token endpoint), Zustand
+  auth store persisted to `localStorage`, Zod schemas mirroring the
+  backend's validation rules exactly, ProblemDetails-aware error parsing.
+- Verified against the real backend (not just mocks): `dotnet build` +
+  `npm run build` both clean, `npm run lint` (oxlint) clean, 4 Vitest/RTL/MSW
+  tests covering the spec's auth-flow scope (sign up → redirect to sign in
+  with confirmation → sign in → invalid-credentials error → client-side
+  validation) all passing. Manually smoke-tested the real `/api/auth/register`
+  and `/api/auth/login` endpoints via curl to confirm the response contract
+  (this caught and fixed a real bug: a bare 401 from login actually carries an
+  auto-generated `title: "Unauthorized"` from ASP.NET's ProblemDetails
+  middleware, not an empty body as first assumed — the frontend's error
+  parsing was adjusted accordingly).
+
+**⚠ Needs manual testing before building on top of it (pending, not yet run):**
+Automated coverage above verified logic and contracts, not the actual
+rendered UI in a real browser. No browser-automation tool was available in
+this session to do that verification, so it's still open. Before starting
+Protected routes, run through:
+- Visual QA of `LandingPage`, `SignInPage`, `SignUpPage` in an actual browser
+  (`npm run dev` in `frontend/`, backend running on `:5080`), both light and
+  dark mode (`prefers-color-scheme`), and at mobile width.
+- A real sign-up → sign-in round trip through the UI (not curl) against the
+  running backend: create an account, confirm the redirect-to-sign-in
+  confirmation banner, sign in, confirm the (expected) 404 on `/dashboard`
+  since Protected routes don't exist yet.
+- Error states in the browser: wrong password, weak password, duplicate
+  email on register.
+- Confirm the `picsum.photos` placeholder images actually load (real network
+  dependency, not mocked in tests).
 
 **Not started yet:**
-- No frontend project exists (`frontend/` directory hasn't been created).
-- Beyond 1.1 (rename, done) and 1.5 (JWT expiry, done), none of the other
+- Beyond 1.1 and 1.5 (both done), none of the other
   Part 1 backend revisions are implemented in code yet: the interest
   taxonomy change, event pricing fields, refresh tokens, soft delete,
   `FirstLoginAtUtc`/`LastAccessAtUtc`, the `Domain/Geography` entities, and
@@ -179,9 +221,9 @@ the frontend (not started yet — see §4).
 In spec order (`docs/superpowers/specs/2026-07-28-frontend-design.md`, Part
 1 — backend revisions to finish before frontend work starts):
 
-1. **1.1** ✅ done in code (uncommitted) — `Dossier` → `Destination Guide`
-   rename throughout (controller, service, DTOs, extensions, route
-   `api/dossier` → `api/destination-guide`, config keys, README, roadmap).
+1. **1.1** ✅ done — `Dossier` → `Destination Guide` rename throughout
+   (controller, service, DTOs, extensions, route `api/dossier` →
+   `api/destination-guide`, config keys, README, roadmap).
 2. **1.2** Apply the interest taxonomy revision (new enum values,
    Ticketmaster/OpenF1 provider tagging changes) — requires a migration and
    a manual drop/reseed of the dev SQLite DB (human-run, not agent-run).
@@ -191,7 +233,7 @@ In spec order (`docs/superpowers/specs/2026-07-28-frontend-design.md`, Part
 4. **1.4** Auth completeness: `RefreshToken` entity + rotation, `POST
    /api/auth/logout`, `DELETE /api/auth/me` (soft delete), registration
    response no longer includes a token — new migration.
-5. **1.5** ✅ done in code (uncommitted) — access token lifetime 2h.
+5. **1.5** ✅ done — access token lifetime 2h.
 6. **1.6** No separate action — this item just documents how 1.2–1.9 get
    delivered (migrations stop short of being applied; live external-API
    verification deferred to manual testing).
@@ -204,14 +246,20 @@ In spec order (`docs/superpowers/specs/2026-07-28-frontend-design.md`, Part
 9. **1.9** Add `Domain/TripPlanning` (`TripPlan`, `TripPlanEvent`) and
    `TripPlanController` (`api/trip-plans`) — new migration.
 
-Then **Part 2 — frontend build**, from scratch: project setup
-(`frontend/`), `DashboardShell` (sidebar + navbar), public pages (Landing,
-SignIn, SignUp), protected pages (Dashboard, Destination Guide
-search/result, Discovery feed, Profile with cascading Country/Region/City
-selects and interests), Axios instance with silent-refresh interceptor,
-TanStack Query hooks per feature, Vitest + RTL + MSW test coverage for the
-flows listed in the spec's Testing section. Google OAuth on the frontend
-stays explicitly deferred (email/password only for now).
+**Part 2 — frontend build:**
+- ✅ **Public routes** (project setup + `LandingPage`, `SignInPage`,
+  `SignUpPage`) — done, uncommitted, see §3.
+- Remaining: `DashboardShell` (sidebar + navbar), protected pages
+  (Dashboard, Destination Guide search/result, Discovery feed, Profile with
+  cascading Country/Region/City selects and interests), `AuthGuard`,
+  silent-refresh added to the Axios interceptor once 1.4 ships
+  `/api/auth/refresh`, TanStack Query hooks per feature, and Vitest/RTL/MSW
+  coverage for the remaining flows listed in the spec's Testing section.
+  Note: `SignInPage` currently navigates straight to `/dashboard` on success
+  (no first-login branching yet) since that route doesn't exist until this
+  work lands, and `IsFirstLogin` doesn't exist on the backend until 1.7.
+  Google OAuth on the frontend stays explicitly deferred (email/password
+  only for now).
 
 **Open assumptions still pending confirmation** (called out in the spec,
 not yet decided by the user): refresh token lifetime (14 days proposed);

@@ -1,0 +1,63 @@
+@import "tailwindcss";
+@import "@fontsource/playfair-display/500.css";
+@import "@fontsource/playfair-display/600.css";
+@import "@fontsource/playfair-display/600-italic.css";
+@import "@fontsource/inter-tight/400.css";
+@import "@fontsource/inter-tight/500.css";
+@import "@fontsource/inter-tight/600.css";
+
+@theme {
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #faf9f7;
+  --color-paper-dim: #f1efeb;
+  --color-ink: #211d1a;
+  --color-ink-soft: #4a453f;
+  --color-line: #e2ddd4;
+
+  --color-brand: #b5541f;
+  --color-brand-strong: #8f4118;
+  --color-brand-soft: #f1ded0;
+
+  --color-slate: #58636e;
+  --color-slate-soft: #eef1f3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+html[data-theme="dark"] body {
+  background-color: #171513;
+  color: #f1ede7;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) body {
+    background-color: #171513;
+    color: #f1ede7;
+  }
+}
